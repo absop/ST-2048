@@ -1,0 +1,19 @@
+[
+    // {
+    //     "caption": "Preferences: Sublime2048 Settings",
+    //     "command": "edit_settings",
+    //     "args": {
+    //       "base_file": "${packages}/Sublime2048/Sublime2048.sublime-settings",
+    //       "default": "/*\n\tSublime2048 user settings in here override the default\n*/\n{\n\t$0\n}\n"
+    //       }
+    // },
+    {
+        "caption": "Sublime2048: resart this game",
+        "command": "sublime2048",
+        "args": {"command": "reset"},
+    },
+    {
+        "caption": "Sublime2048: create game in new view",
+        "command": "sublime2048_setup"
+    }
+]

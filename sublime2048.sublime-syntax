@@ -1,0 +1,64 @@
+%YAML 1.2
+---
+# See http://www.sublimetext.com/docs/3/syntax.html
+scope: text.sublime2048
+
+# variables:
+
+
+contexts:
+  main:
+    - match: '[a-zA-Z]+'
+      scope: keyword.sublime2048
+
+    - match: \d+
+      scope: constant.numeric.sublime2048
+
+    - match: ╠═══════╤═══════╤═══════╤═══════╣
+      scope: boundary.sublime2048
+      push: board
+
+    - match: ↑|↓|←|→
+      scope: arrow.sublime2048
+
+    - match: ─|╠|╤|╧|╟|╢|┼|║|│|╚|═|╝|╔|╗|╣
+      scope: boundary.sublime2048
+
+
+  board:
+    - match: ─|╠|╤|╧|╟|╢|┼|║|│|╚|═|╝
+      scope: boundary.sublime2048
+    - match: '\b2\b'
+      scope: numeric.2.sublime2048
+    - match: '\b4\b'
+      scope: numeric.4.sublime2048
+    - match: '\b8\b'
+      scope: numeric.8.sublime2048
+    - match: '\b16\b'
+      scope: numeric.16.sublime2048
+    - match: '\b32\b'
+      scope: numeric.32.sublime2048
+    - match: '\b64\b'
+      scope: numeric.64.sublime2048
+    - match: '\b128\b'
+      scope: numeric.128.sublime2048
+    - match: '\b256\b'
+      scope: numeric.256.sublime2048
+    - match: '\b512\b'
+      scope: numeric.512.sublime2048
+    - match: '\b1024\b'
+      scope: numeric.1024.sublime2048
+    - match: '\b2048\b'
+      scope: numeric.2048.sublime2048
+    - match: '\b4096\b'
+      scope: numeric.4096.sublime2048
+    - match: '\b8192\b'
+      scope: numeric.8192.sublime2048
+    - match: '\b16384\b'
+      scope: numeric.16384.sublime2048
+    - match: '\b32768\b'
+      scope: numeric.32768.sublime2048
+    - match: '\b65536\b'
+      scope: numeric.65536.sublime2048
+
+

@@ -1,0 +1,34 @@
+[
+    {
+        "keys": ["up"],
+        "command": "sublime2048",
+        "args": { "command": "move", "key": "↑"},
+        "context": [{
+                "key": "read_only", "operator": "equal", "operand": true
+            }]
+    },
+    {
+        "keys": ["down"],
+        "command": "sublime2048",
+        "args": { "command": "move", "key": "↓"},
+        "context": [{
+                "key": "read_only", "operator": "equal", "operand": true
+            }]
+    },
+    {
+        "keys": ["left"],
+        "command": "sublime2048",
+        "args": { "command": "move", "key": "←"},
+        "context": [{
+                "key": "read_only", "operator": "equal", "operand": true
+            }]
+    },
+    {
+        "keys": ["right"],
+        "command": "sublime2048",
+        "args": { "command": "move", "key": "→"},
+        "context": [{
+                "key": "read_only", "operator": "equal", "operand": true
+            }]
+    }
+]

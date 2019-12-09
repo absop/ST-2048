@@ -1,0 +1,120 @@
+{
+    "name": "Rainbow Brackets",
+    "author": "https://github.com/absop",
+
+    "variables": {},
+    "globals": {
+        "background": "#fafafa"
+    },
+
+    "rules": [
+        {
+            "scope": "boundary.sublime2048",
+            "name": "sublime2048",
+            "background": "#fafafa",
+            "foreground": "#D9D9D9"
+        },
+        {
+            "scope": "arrow.sublime2048",
+            "name": "sublime2048",
+            "background": "#fafafa",
+            "foreground": "#FF5370"
+        },
+        {
+            "scope": "numeric.2.sublime2048",
+            "name": "sublime2048_number",
+            "background": "#fafafa",
+            "foreground": "#D3D385"
+        },
+        {
+            "scope": "numeric.4.sublime2048",
+            "name": "sublime2048_number",
+            "background": "#fafafa",
+            "foreground": "#E8BE8B"
+        },
+        {
+            "scope": "numeric.8.sublime2048",
+            "name": "sublime2048_number",
+            "background": "#fafafa",
+            "foreground": "#F4A460"
+        },
+        {
+            "scope": "numeric.16.sublime2048",
+            "name": "sublime2048_number",
+            "background": "#fafafa",
+            "foreground": "#F48D4A"
+        },
+        {
+            "scope": "numeric.32.sublime2048",
+            "name": "sublime2048_number",
+            "background": "#fafafa",
+            "foreground": "#FF7F50"
+        },
+        {
+            "scope": "numeric.64.sublime2048",
+            "name": "sublime2048_number",
+            "background": "#fafafa",
+            "foreground": "#F5725B"
+        },
+        {
+            "scope": "numeric.128.sublime2048",
+            "name": "sublime2048_number",
+            "background": "#fafafa",
+            "foreground": "#F86048"
+        },
+        {
+            "scope": "numeric.256.sublime2048",
+            "name": "sublime2048_number",
+            "background": "#fafafa",
+            "foreground": "#D85C4c"
+        },
+        {
+            "scope": "numeric.512.sublime2048",
+            "name": "sublime2048_number",
+            "background": "#fafafa",
+            "foreground": "#CD5C5C"
+        },
+        {
+            "scope": "numeric.1024.sublime2048",
+            "name": "sublime2048_number",
+            "background": "#fafafa",
+            "foreground": "#C9413C"
+        },
+        {
+            "scope": "numeric.2048.sublime2048",
+            "name": "sublime2048_number",
+            "background": "#fafafa",
+            "foreground": "#B53835"
+        },
+        {
+            "scope": "numeric.4096.sublime2048",
+            "name": "sublime2048_number",
+            "background": "#fafafa",
+            "foreground": "#A52A2A"
+        },
+        {
+            "scope": "numeric.8192.sublime2048",
+            "name": "sublime2048_number",
+            "background": "#fafafa",
+            "foreground": "#A13A3A"
+        },
+        {
+            "scope": "numeric.16384.sublime2048",
+            "name": "sublime2048_number",
+            "background": "#fafafa",
+            "foreground": "#B4122A"
+        },
+        {
+            "scope": "numeric.32768.sublime2048",
+            "name": "sublime2048_number",
+            "background": "#fafafa",
+            "foreground": "#B02031"
+        },
+        {
+            "scope": "numeric.65536.sublime2048",
+            "name": "sublime2048_number",
+            "background": "#fafafa",
+            "foreground": "#000000"
+        }
+    ]
+}
