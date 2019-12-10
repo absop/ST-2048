@@ -11,7 +11,8 @@ import sublime_plugin
 启动新游戏时，加载全局游戏记录作为View的初始游戏记录
 """
 
-sublime2048_record = "sublime2048.sublime-settings"
+sublime2048_record = "Sublime2048Record.sublime-settings"
+
 
 class Score():
     def __init__(self):
@@ -140,10 +141,6 @@ class Board():
     def score(self):
         return self.grid.score.current
 
-    def add_randnum(self):
-        if self.grid.nblank > 0:
-            self.grid.add_randnum()
-
     def move(self, direction):
         return self.moves[direction](self.grid)
 
@@ -181,10 +178,10 @@ class Sublime2048(sublime_plugin.TextCommand):
         ║       │       │       │       ║
         ╚═══════╧═══════╧═══════╧═══════╝"""
     game_over_tips = """
-                 游戏结束
+                     游戏结束
     """
     game_won_tips = """
-                  你赢了
+                      你赢了
     """
     def run(self, edit, command=None, key=None, record=None):
         if command == "move":
@@ -195,9 +192,6 @@ class Sublime2048(sublime_plugin.TextCommand):
 
         elif command == "setup":
             self.setup(edit, record)
-
-        elif command == "save_record":
-            self.save_record()
 
     def setup(self, edit, record):
         if not record:
@@ -210,19 +204,18 @@ class Sublime2048(sublime_plugin.TextCommand):
         self.arrow = None
         self.game_overed = not self.board.isalive()
         if self.game_overed:
-            self.game_resart(edit)
+            self.game_over(edit)
         self.refresh(edit)
 
     def create_game_board(self, view):
         view.set_name("2048")
         view.set_scratch(True)
-        view.assign_syntax("sublime2048.sublime-syntax")
+        view.assign_syntax("Sublime2048.sublime-syntax")
         view.settings().set("sublime2048", True)
+        view.settings().set("highlight_line", False)
+        view.settings().set("scroll_past_end", False)
         view.settings().set("draw_white_space", None)
-        view.settings().set("color_scheme",
-            "Material-Lighter.sublime-color-scheme")
         view.run_command('append', {'characters': self.game_board_text})
-
 
     def board_regions(self):
         region = self.view.find(" SCORE ", 0)
@@ -257,7 +250,7 @@ class Sublime2048(sublime_plugin.TextCommand):
         if not self.game_overed:
             self.moved = self.board.move(key)
             if self.moved:
-                self.board.add_randnum()
+                row, col = self.board.grid.add_randnum()
                 if not self.board.isalive():
                     self.game_over(edit)
                 if self.board.iswon():
@@ -266,31 +259,28 @@ class Sublime2048(sublime_plugin.TextCommand):
                 record = self.board.grid.record()
                 self.view.settings().set("record", record)
 
-                self.refresh(edit)
+                self.refresh(edit, row=row, col=col)
 
     def game_won(self, edit):
-        endpt = self.view.size()
-        self.view.set_read_only(False)
-        self.view.insert(edit, endpt, self.game_won_tips)
-        self.view.set_read_only(True)
+        self.status_message(edit, self.game_won_tips)
 
     def game_resart(self, edit):
-        self.view.set_read_only(False)
-        self.view.erase(edit,
-            sublime.Region(len(self.game_board_text), self.view.size()))
-        self.view.set_read_only(True)
+        self.status_message(edit, "")
         self.game_overed = False
         self.board.grid.reset()
         self.refresh(edit)
 
     def game_over(self, edit):
-        endpt = self.view.size()
-        self.view.set_read_only(False)
-        self.view.insert(edit, endpt, self.game_over_tips)
-        self.view.set_read_only(True)
+        self.status_message(edit, self.game_over_tips)
         self.game_overed = True
 
-    def refresh(self, edit):
+    def status_message(self, edit, msg):
+        self.view.set_read_only(False)
+        self.view.replace(edit,
+            sublime.Region(len(self.game_board_text), self.view.size()), msg)
+        self.view.set_read_only(True)
+
+    def refresh(self, edit, row=None, col=None):
         def align(num):
             ns = 7 - len(num)
             ls = ns >> 1
@@ -313,25 +303,29 @@ class Sublime2048(sublime_plugin.TextCommand):
         self.view.replace(edit, self.regions["got"],
                           formater("%+d", self.moved))
 
-        for row in range(4):
-            for col in range(4):
-                number = self.board.grid.numbers[row][col]
-                region = self.board.grid.regions[row][col]
-                key = "%d_%d_sublime2048" % (row, col)
+        for x in range(4):
+            for y in range(4):
+                number = self.board.grid.numbers[x][y]
+                region = self.board.grid.regions[x][y]
+                key = "%d_%d_sublime2048" % (x, y)
                 self.view.replace(edit, region, formater("%d", number))
                 self.view.erase_regions(key)
                 self.view.add_regions(key,
-                    self.regions["grid"][row][col],
-                    scope="%d.sublime2048" % number)
+                    self.regions["grid"][x][y],
+                    scope="%s.sublime2048" % (number or "empty"),
+                    flags=sublime.DRAW_NO_OUTLINE|sublime.PERSISTENT)
+
+        self.view.erase_regions("new_sublime2048")
+        if row is not None:
+            self.view.erase_regions("%d_%d_sublime2048" % (row, col))
+            number = self.board.grid.numbers[row][col]
+            self.view.add_regions("new_sublime2048",
+                self.regions["grid"][row][col],
+                scope="%d.sublime2048 new_number.sublime2048" % number,
+                flags=sublime.DRAW_NO_OUTLINE|sublime.PERSISTENT)
 
         self.view.sel().clear()
         self.view.set_read_only(True)
-
-    def save_record(self):
-        settings = sublime.load_settings(sublime2048_record)
-        settings.set("record", self.board.grid.record())
-        sublime.save_settings(sublime2048_record)
-        sublime.status_message("Sublime2048: game record saved")
 
     def load_record(self):
         settings = sublime.load_settings(sublime2048_record)
@@ -344,18 +338,26 @@ class Sublime2048Setup(sublime_plugin.WindowCommand):
         view.run_command("sublime2048", {"command": "setup"})
 
 
-class Sublime2048Manager(sublime_plugin.EventListener):
-    activated_games = set()
+class Sublime2048Manager(sublime_plugin.ViewEventListener):
+    is_activated = False
 
-    def on_activated(self, view):
-        if view.view_id in self.activated_games:
-            return
-        settings = view.settings()
-        if (settings.has("sublime2048") and settings.has("record")):
-            view.run_command("sublime2048",
-                {"command": "setup", "record": settings.get("record")})
-            self.activated_games.add(view.view_id)
+    @classmethod
+    def is_applicable(cls, settings):
+        return settings.has("sublime2048") and settings.has("record")
 
-    def on_close(self, view):
-        if view.settings().has("sublime2048"):
-            view.run_command("sublime2048", {"command": "save_record"})
+    def on_activated(self):
+        if not self.is_activated:
+            self.view.run_command("sublime2048", {
+                "command": "setup",
+                "record": self.view.settings().get("record")
+            })
+            self.is_activated = True
+
+    def on_close(self):
+        self.save_record()
+        sublime.status_message("Sublime2048: game record saved")
+
+    def save_record(self):
+        settings = sublime.load_settings(sublime2048_record)
+        settings.set("record", self.view.settings().get("record"))
+        sublime.save_settings(sublime2048_record)

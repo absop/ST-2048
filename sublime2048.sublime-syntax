@@ -3,9 +3,6 @@
 # See http://www.sublimetext.com/docs/3/syntax.html
 scope: text.sublime2048
 
-# variables:
-
-
 contexts:
   main:
     - match: '[a-zA-Z]+'
