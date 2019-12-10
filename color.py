@@ -36,6 +36,7 @@ class ColorSchemeManager():
     def build(self):
         styles = sublime.active_window().active_view().style()
         colors = self.settings.get("colors")
+        foreground = colors["foreground"].pop("numbers")
 
         color_scheme_path = self.cache_path()
         color_scheme_name = os.path.basename(
@@ -49,15 +50,13 @@ class ColorSchemeManager():
             "rules": [
                 {
                     "scope": key + ".sublime2048",
-                    # "name": "sublime2048",
-                    "foreground": colors["foreground"]["numbers"],
+                    "foreground": foreground,
                     "background": value
                 }
                 for key, value in colors["background"].items()
             ] + [
                 {
                     "scope": key + ".sublime2048",
-                    # "name": "sublime2048",
                     "foreground": value,
                 }
                 for key, value in colors["foreground"].items()
