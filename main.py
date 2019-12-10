@@ -1,16 +1,14 @@
-import os
 import time
-import json
 from random import randint
 
 import sublime
 import sublime_plugin
 
-""" 目前
-Sublime关闭时，保存每一个View的游戏记录，
-关闭一个View时，如果该View有游戏记录，将它的记录保存至全局记录
+""" 游戏保存记录的方式
+每个View有独立对的游戏记录，全局游戏记录只有一个
+当某个View关闭时，将它的 游戏记录保存为全局游戏记录，
 
-新启动游戏时，加载全局游戏记录作为View的初始游戏记录
+启动新游戏时，加载全局游戏记录作为View的初始游戏记录
 """
 
 sublime2048_record = "sublime2048.sublime-settings"
@@ -24,24 +22,10 @@ class Score():
         self.current += delta
         self.highest = max(self.current, self.highest)
 
-# 尚未实现动态计算各个数值区域的代码
-status_regions = [(136, 143), (144, 151), (152, 159), (160, 167)]
-
-grid_regions = [
-    [(304, 311), (312, 319), (320, 327), (328, 335)],
-    [(472, 479), (480, 487), (488, 495), (496, 503)],
-    [(640, 647), (648, 655), (656, 663), (664, 671)],
-    [(808, 815), (816, 823), (824, 831), (832, 839)]
-]
-
-
 class Grid():
-    def __init__(self, record):
+    def __init__(self, regions, record):
+        self.regions = regions
         self.score = Score()
-        self.regions = [
-            [sublime.Region(a, b) for a, b in row]
-            for row in grid_regions
-        ]
         try:
             self.load(record)
         except:
@@ -147,8 +131,8 @@ class Board():
         "←": genmove(lambda n: n + 1, 0, +4, lambda x, y: (x, y)),
         "→": genmove(lambda n: n - 1, 3, -1, lambda x, y: (x, y))
     }
-    def __init__(self, record={}):
-        self.grid = Grid(record)
+    def __init__(self, region, record={}):
+        self.grid = Grid(region, record)
 
     def best(self):
         return self.grid.score.highest
@@ -159,12 +143,6 @@ class Board():
     def add_randnum(self):
         if self.grid.nblank > 0:
             self.grid.add_randnum()
-
-    def background(self, x, y):
-        i = 0
-        while (1 << i) < self.grid.numbers[x][y]:
-            i += 1
-        return self.backgrounds[i]
 
     def move(self, direction):
         return self.moves[direction](self.grid)
@@ -177,45 +155,11 @@ class Board():
 
 
 class Sublime2048(sublime_plugin.TextCommand):
-    def run(self, edit, command=None, key=None, record=None):
-        if command == "move":
-            self.arrow = key
-            self.moved = self.board.move(key)
-            if self.moved:
-                self.board.add_randnum()
-                if not self.board.isalive():
-                    self.game_over()
+    game_captions = ("score", "best", "key", "got")
 
-                self.refresh(edit)
-
-        elif command == "reset":
-            self.board.grid.reset()
-            self.refresh(edit)
-
-        elif command == "setup":
-            self.setup(edit, record or self.load_record())
-
-        elif command == "save":
-            record = self.board.grid.record()
-            self.view.settings().set("record", record)
-
-        elif command == "save_record":
-            self.save_record()
-
-    def game_over(self):
-        pass
-
-    def setup(self, edit, record):
-        view = self.view
-        view.set_name("2048")
-        view.set_scratch(True)
-        view.assign_syntax("sublime2048.sublime-syntax")
-        view.settings().set("sublime2048", True)
-        view.settings().set("color_scheme",
-            "Material-Lighter.sublime-color-scheme")
-        view.run_command('append', {'characters': """
+    game_board_text = """
         ╔═══════╤═══════╤═══════╤═══════╗
-        ║ SCORE │  BEST │  Key  │  Get  ║
+        ║ SCORE │  BEST │  Key  │  Got  ║
         ╟───────┼───────┼───────┼───────╢
         ║       │       │       │       ║
         ╠═══════╧═══════╧═══════╧═══════╣
@@ -235,12 +179,115 @@ class Sublime2048(sublime_plugin.TextCommand):
         ║       │       │       │       ║
         ║  8192 │ 16384 │ 32768 │ 65536 ║
         ║       │       │       │       ║
-        ╚═══════╧═══════╧═══════╧═══════╝"""})
+        ╚═══════╧═══════╧═══════╧═══════╝"""
+    game_over_tips = """
+                 游戏结束
+    """
+    game_won_tips = """
+                  你赢了
+    """
+    def run(self, edit, command=None, key=None, record=None):
+        if command == "move":
+            self.move(edit, key)
 
-        self.board = Board(record)
+        elif command == "reset":
+            self.game_resart(edit)
+
+        elif command == "setup":
+            self.setup(edit, record)
+
+        elif command == "save_record":
+            self.save_record()
+
+    def setup(self, edit, record):
+        if not record:
+            self.create_game_board(self.view)
+            record = self.load_record()
+
+        self.regions = self.board_regions()
+        self.board = Board(self.regions["cell"], record)
         self.moved = 0
         self.arrow = None
+        self.game_overed = not self.board.isalive()
+        if self.game_overed:
+            self.game_resart(edit)
         self.refresh(edit)
+
+    def create_game_board(self, view):
+        view.set_name("2048")
+        view.set_scratch(True)
+        view.assign_syntax("sublime2048.sublime-syntax")
+        view.settings().set("sublime2048", True)
+        view.settings().set("color_scheme",
+            "Material-Lighter.sublime-color-scheme")
+        view.run_command('append', {'characters': self.game_board_text})
+
+
+    def board_regions(self):
+        region = self.view.find(" SCORE ", 0)
+        length = self.view.line(region).size() + 1
+
+        start_point = region.begin() + 2 * length
+        regions = {
+            self.game_captions[i]: sublime.Region(
+                start_point + i * 8, start_point + i * 8 + 7)
+            for i in range(4)
+        }
+
+        grid_regions = regions["grid"] = []
+        cell_regions = regions["cell"] = []
+        for i in range(4):
+            grid_regions.append([])
+            cell_regions.append([])
+            grid_start_point = region.begin() + (5 + i * 4) * length
+            for j in range(4):
+                grid_regions[i].append(tuple(
+                    sublime.Region(a, a + 7)
+                    for a in range(grid_start_point,
+                        grid_start_point + 3 * length, length)
+                ))
+                cell_regions[i].append(grid_regions[i][j][1])
+                grid_start_point += 8
+
+        return regions
+
+    def move(self, edit, key):
+        self.arrow = key
+        if not self.game_overed:
+            self.moved = self.board.move(key)
+            if self.moved:
+                self.board.add_randnum()
+                if not self.board.isalive():
+                    self.game_over(edit)
+                if self.board.iswon():
+                    self.game_won(edit)
+
+                record = self.board.grid.record()
+                self.view.settings().set("record", record)
+
+                self.refresh(edit)
+
+    def game_won(self, edit):
+        endpt = self.view.size()
+        self.view.set_read_only(False)
+        self.view.insert(edit, endpt, self.game_won_tips)
+        self.view.set_read_only(True)
+
+    def game_resart(self, edit):
+        self.view.set_read_only(False)
+        self.view.erase(edit,
+            sublime.Region(len(self.game_board_text), self.view.size()))
+        self.view.set_read_only(True)
+        self.game_overed = False
+        self.board.grid.reset()
+        self.refresh(edit)
+
+    def game_over(self, edit):
+        endpt = self.view.size()
+        self.view.set_read_only(False)
+        self.view.insert(edit, endpt, self.game_over_tips)
+        self.view.set_read_only(True)
+        self.game_overed = True
 
     def refresh(self, edit):
         def align(num):
@@ -256,20 +303,26 @@ class Sublime2048(sublime_plugin.TextCommand):
 
         self.view.set_read_only(False)
 
-        self.view.replace(edit, sublime.Region(*status_regions[0]),
+        self.view.replace(edit, self.regions["score"],
                           align("%d" % self.board.score()))
-        self.view.replace(edit, sublime.Region(*status_regions[1]),
+        self.view.replace(edit, self.regions["best"],
                           align("%d" % self.board.best()))
-        self.view.replace(edit, sublime.Region(*status_regions[2]),
+        self.view.replace(edit, self.regions["key"],
                           align(self.arrow or ""))
-        self.view.replace(edit, sublime.Region(*status_regions[3]),
+        self.view.replace(edit, self.regions["got"],
                           formater("%+d", self.moved))
 
         for row in range(4):
             for col in range(4):
                 number = self.board.grid.numbers[row][col]
                 region = self.board.grid.regions[row][col]
+                key = "%d_%d_sublime2048" % (row, col)
                 self.view.replace(edit, region, formater("%d", number))
+                self.view.erase_regions(key)
+                self.view.add_regions(key,
+                    self.regions["grid"][row][col],
+                    scope="%d.sublime2048" % number)
+
         self.view.sel().clear()
         self.view.set_read_only(True)
 
@@ -301,12 +354,6 @@ class Sublime2048Manager(sublime_plugin.EventListener):
             view.run_command("sublime2048",
                 {"command": "setup", "record": settings.get("record")})
             self.activated_games.add(view.view_id)
-
-    # 目前没找到在sublime关闭时调用的函数，
-    # 只能求助于这个函数，不过不能保存最后记录
-    def on_deactivated(self, view):
-        if view.settings().has("sublime2048"):
-            view.run_command("sublime2048", {"command": "save"})
 
     def on_close(self, view):
         if view.settings().has("sublime2048"):
