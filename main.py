@@ -218,6 +218,7 @@ class Sublime2048(sublime_plugin.TextCommand):
         view.set_scratch(True)
         view.assign_syntax("sublime2048.sublime-syntax")
         view.settings().set("sublime2048", True)
+        view.settings().set("draw_white_space", None)
         view.settings().set("color_scheme",
             "Material-Lighter.sublime-color-scheme")
         view.run_command('append', {'characters': self.game_board_text})
@@ -327,10 +328,10 @@ class Sublime2048(sublime_plugin.TextCommand):
         self.view.set_read_only(True)
 
     def save_record(self):
-        sublime.status_message("Sublime2048: save record")
         settings = sublime.load_settings(sublime2048_record)
         settings.set("record", self.board.grid.record())
         sublime.save_settings(sublime2048_record)
+        sublime.status_message("Sublime2048: game record saved")
 
     def load_record(self):
         settings = sublime.load_settings(sublime2048_record)
