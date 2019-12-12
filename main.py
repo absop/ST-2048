@@ -343,7 +343,7 @@ class Sublime2048Manager(sublime_plugin.ViewEventListener):
 
     @classmethod
     def is_applicable(cls, settings):
-        return settings.has("sublime2048") and settings.has("record")
+        return settings.has("sublime2048")
 
     def on_query_context(self, key, operator, operand, match_all):
         return key == "play2048"
@@ -360,10 +360,11 @@ class Sublime2048Manager(sublime_plugin.ViewEventListener):
             self.is_activated = True
 
     def on_close(self):
-        self.save_record()
-        sublime.status_message("Sublime2048: game record saved")
+        if self.view.settings().has("record"):
+            self.save_record(self.view.settings().get("record"))
+            sublime.status_message("Sublime2048: game record saved")
 
-    def save_record(self):
+    def save_record(self, record):
         settings = sublime.load_settings(sublime2048_record)
-        settings.set("record", self.view.settings().get("record"))
+        settings.set("record", record)
         sublime.save_settings(sublime2048_record)
