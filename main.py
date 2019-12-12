@@ -345,6 +345,9 @@ class Sublime2048Manager(sublime_plugin.ViewEventListener):
     def is_applicable(cls, settings):
         return settings.has("sublime2048") and settings.has("record")
 
+    def on_query_context(self, key, operator, operand, match_all):
+        return key == "play2048"
+
     def on_activated(self):
         if not self.is_activated:
             self.view.run_command("sublime2048", {
