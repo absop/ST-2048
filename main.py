@@ -348,6 +348,9 @@ class Sublime2048Manager(sublime_plugin.ViewEventListener):
     def on_query_context(self, key, operator, operand, match_all):
         return key == "play2048"
 
+    def on_selection_modified(self):
+        self.view.sel().clear()
+
     def on_activated(self):
         if not self.is_activated:
             self.view.run_command("sublime2048", {
