@@ -8,12 +8,12 @@
           }
     },
     {
-        "caption": "Sublime2048: resart this game",
+        "caption": "Sublime2048: Resart This Game",
         "command": "sublime2048",
         "args": {"command": "reset"},
     },
     {
-        "caption": "Sublime2048: create game in new view",
+        "caption": "Sublime2048: Create Game in New View",
         "command": "sublime2048_setup"
     }
 ]
