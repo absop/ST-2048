@@ -207,6 +207,12 @@ class Sublime2048(sublime_plugin.TextCommand):
     game_won_tips = """
                       你赢了
     """
+
+    @classmethod
+    def load_resource(cls):
+        cls.css = sublime.load_resource("Packages/Sublime2048/html/ui.css")
+        cls.html = sublime.load_resource("Packages/Sublime2048/html/ui.html")
+
     def run(self, edit, command=None, key=None, record=None):
         if command == "move":
             self.move(edit, key)
@@ -443,6 +449,4 @@ class Sublime2048Manager(sublime_plugin.ViewEventListener):
 
 
 def plugin_loaded():
-    load_resource = sublime.load_resource
-    Sublime2048.css = load_resource("Packages/Sublime2048/html/ui.css")
-    Sublime2048.html = load_resource("Packages/Sublime2048/html/ui.html")
+    sublime.set_timeout_async(Sublime2048.load_resource)

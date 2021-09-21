@@ -8,10 +8,11 @@ class ColorSchemeManager():
 
     def __init__(self):
         self.settings = sublime.load_settings("Sublime2048.sublime-settings")
-        self.preferences = sublime.load_settings(
-            "Preferences.sublime-settings")
+        self.prefs = sublime.load_settings("Preferences.sublime-settings")
+        self.settings.clear_on_change('colors')
+        self.prefs.clear_on_change("color_scheme")
         self.settings.add_on_change("colors", self.build)
-        self.preferences.add_on_change("color_scheme", self.rebuild)
+        self.prefs.add_on_change("color_scheme", self.rebuild)
         self.build()
 
     def cache_path(self):
@@ -28,14 +29,15 @@ class ColorSchemeManager():
                     pass
 
     def rebuild(self):
-        scheme = self.preferences.get("color_scheme", self.color_scheme)
+        scheme = self.prefs.get("color_scheme", self.color_scheme)
         if scheme != self.color_scheme:
             self.color_scheme = scheme
             self.build()
 
     def build(self):
-        styles = sublime.active_window().active_view().style()
         colors = self.settings.get("colors")
+        if not colors:
+            return
         foreground = colors["foreground"].pop("numbers")
 
         color_scheme_path = self.cache_path()
@@ -68,4 +70,4 @@ class ColorSchemeManager():
 
 
 def plugin_loaded():
-    ColorSchemeManager()
+    sublime.set_timeout_async(ColorSchemeManager)
