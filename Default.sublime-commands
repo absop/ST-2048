@@ -1,19 +1,19 @@
 [
     {
-        "caption": "Preferences: Sublime2048 Settings",
+        "caption": "Preferences: 2048 Settings",
         "command": "edit_settings",
         "args": {
-          "base_file": "${packages}/Sublime2048/Sublime2048.sublime-settings",
-          "default": "/*\n\tSublime2048 user settings in here override the default\n*/\n{\n\t$0\n}\n"
+          "base_file": "${packages}/2048/2048.sublime-settings",
+          "default": "/*\n\t2048 user settings in here override the default\n*/\n{\n\t$0\n}\n"
           }
     },
     {
-        "caption": "Sublime2048: Resart This Game",
-        "command": "sublime2048",
-        "args": {"command": "reset"},
+        "caption": "2048: Resart This Game",
+        "command": "game2048_run_command",
+        "args": {"command": "restart"},
     },
     {
-        "caption": "Sublime2048: Create Game in New View",
-        "command": "sublime2048_setup"
+        "caption": "2048: Create Game in New View",
+        "command": "game2048_setup"
     }
 ]

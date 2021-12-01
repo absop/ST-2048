@@ -13,7 +13,7 @@ import sublime_plugin
 启动新游戏时，加载全局游戏记录作为View的初始游戏记录
 """
 
-sublime2048_record = "Sublime2048Record.sublime-settings"
+game2048_record = "2048.record.sublime-settings"
 
 
 class Board():
@@ -175,7 +175,7 @@ class Game():
         return best_d
 
 
-class Sublime2048(sublime_plugin.TextCommand):
+class Game2048RunCommandCommand(sublime_plugin.TextCommand):
     game_captions = ("score", "best", "key", "got")
 
     game_board_text = """
@@ -210,36 +210,59 @@ class Sublime2048(sublime_plugin.TextCommand):
 
     @classmethod
     def load_resource(cls):
-        cls.css = sublime.load_resource("Packages/Sublime2048/html/ui.css")
-        cls.html = sublime.load_resource("Packages/Sublime2048/html/ui.html")
+        cls.css = sublime.load_resource(f"Packages/{__package__}/html/ui.css")
+        cls.html = sublime.load_resource(f"Packages/{__package__}/html/ui.html")
 
-    def run(self, edit, command=None, key=None, record=None):
-        if command == "move":
-            self.move(edit, key)
+    def run(self, edit, command, **args):
+        try:
+            func = getattr(self, command)
+            func(edit, **args)
+            print(f"{__package__}: {command}{f' {args}' if args else ''}")
+        except:
+            print(f"{__package__}: error command '{command}'")
 
-        elif command == "auto_move":
-            if not self.game.isalive():
-                self.stop_ai()
-                return
-            def threaded_auto_run():
-                key = self.game.get_best_key()
+    def toggle_auto_move(self, edit):
+        if self.view.settings().get('2048.ai', False):
+            self.stop_ai()
+        else:
+            self.run_ai()
+
+    def auto_move(self, edit):
+        def continue_move():
+            if self.view.settings().get('2048.ai', False):
                 self.view.run_command(
-                    'sublime2048', {'command': 'move', 'key': key})
-                if self.view.settings().get('play2048_ai', False):
-                    sublime.set_timeout(
-                        lambda: self.view.run_command(
-                            'sublime2048', {'command': 'auto_move'}),
-                        0)
-            thread = threading.Thread(target=threaded_auto_run)
-            thread.start()
+                    'game2048_run_command', {'command': 'auto_move'})
 
-        elif command == "reset":
-            self.game_resart(edit)
+        if not self.game.isalive():
+            self.stop_ai()
+            return
+        key = self.game.get_best_key()
+        self.move(edit, key)
+        sublime.set_timeout(continue_move, 100)
 
-        elif command == "setup":
-            self.setup(edit, record)
+    def move(self, edit, key):
+        self.arrow = key
+        if not self.game_overed:
+            self.moved = self.game.move(key)
+            if self.moved:
+                row, col = self.game.bodrd.add_randnum()
+                if not self.game.isalive():
+                    self.game_over(edit)
+                if self.game.iswon():
+                    self.game_won(edit)
 
-    def setup(self, edit, record):
+                record = self.game.bodrd.record()
+                self.view.settings().set("2048.record", record)
+
+                self.refresh(edit, row=row, col=col)
+
+    def restart(self, edit):
+        self.status_message(edit, "")
+        self.game_overed = False
+        self.game.bodrd.reset()
+        self.refresh(edit)
+
+    def setup(self, edit, record=None):
         if not record:
             self.create_game_board(self.view)
             record = self.load_record()
@@ -276,7 +299,7 @@ class Sublime2048(sublime_plugin.TextCommand):
         self.arrow = None
         self.game_overed = not self.game.isalive()
 
-        if not self.view.settings().get('play2048_ai', False):
+        if not self.view.settings().get('2048.ai', False):
             self.stop_ai()
         if self.game_overed:
             self.game_over(edit)
@@ -286,21 +309,22 @@ class Sublime2048(sublime_plugin.TextCommand):
     def create_game_board(self, view):
         view.set_name("2048")
         view.set_scratch(True)
-        view.assign_syntax("Sublime2048.sublime-syntax")
-        view.settings().set("sublime2048", True)
+        view.assign_syntax("2048.sublime-syntax")
+        view.settings().set("2048", True)
         view.settings().set("highlight_line", False)
         view.settings().set("scroll_past_end", False)
         view.settings().set("draw_white_space", None)
+        view.settings().set("indent_guide_options", [])
         view.run_command('append', {'characters': self.game_board_text})
 
     def run_ai(self):
-        self.view.settings().set('play2048_ai', True)
+        self.view.settings().set('2048.ai', True)
         # self.add_ai_annotation('stop_ai', '停止')
         self.add_ai_annotation('stop_ai', '✘')
-        self.view.run_command('sublime2048', {'command': 'auto_move'})
+        self.view.run_command('game2048_run_command', {'command': 'auto_move'})
 
     def stop_ai(self):
-        self.view.settings().set('play2048_ai', False)
+        self.view.settings().set('2048.ai', False)
         # self.add_ai_annotation('run_ai', '自动')
         self.add_ai_annotation('run_ai', '➜')
 
@@ -308,9 +332,9 @@ class Sublime2048(sublime_plugin.TextCommand):
         content = """
             <span class="label label-success"><a href="%s">%s</a></span>
         """ % (href, img)
-        self.view.erase_phantoms('Play2048')
+        self.view.erase_phantoms('2048.ai')
         self.view.add_phantom(
-            'Play2048',
+            '2048.ai',
             self.annotation_region,
             self.html.format(css=self.css, content=content),
             sublime.LAYOUT_INLINE, self.on_navigate
@@ -322,30 +346,8 @@ class Sublime2048(sublime_plugin.TextCommand):
         else:
             self.stop_ai()
 
-    def move(self, edit, key):
-        self.arrow = key
-        if not self.game_overed:
-            self.moved = self.game.move(key)
-            if self.moved:
-                row, col = self.game.bodrd.add_randnum()
-                if not self.game.isalive():
-                    self.game_over(edit)
-                if self.game.iswon():
-                    self.game_won(edit)
-
-                record = self.game.bodrd.record()
-                self.view.settings().set("record", record)
-
-                self.refresh(edit, row=row, col=col)
-
     def game_won(self, edit):
         self.status_message(edit, self.game_won_tips)
-
-    def game_resart(self, edit):
-        self.status_message(edit, "")
-        self.game_overed = False
-        self.game.bodrd.reset()
-        self.refresh(edit)
 
     def game_over(self, edit):
         self.status_message(edit, self.game_over_tips)
@@ -384,69 +386,69 @@ class Sublime2048(sublime_plugin.TextCommand):
             for y in range(4):
                 number = self.game.bodrd.matrix[x][y]
                 region = self.tile_regions[x][y][1]
-                key = "%d_%d_sublime2048" % (x, y)
+                key = "2048.(%d,%d)" % (x, y)
                 self.view.replace(edit, region, formater("%d", number))
                 self.view.erase_regions(key)
                 self.view.add_regions(key, self.tile_regions[x][y],
-                    scope="%s.sublime2048" % (number or "empty"),
+                    scope="%s.2048" % (number or "empty"),
                     flags=sublime.DRAW_NO_OUTLINE|sublime.PERSISTENT)
 
-        self.view.erase_regions("new_sublime2048")
+        self.view.erase_regions("2048.new_number")
         if row is not None:
-            self.view.erase_regions("%d_%d_sublime2048" % (row, col))
+            self.view.erase_regions("%d_%d_2048" % (row, col))
             number = self.game.bodrd.matrix[row][col]
-            self.view.add_regions("new_sublime2048",
+            self.view.add_regions("2048.new_number",
                 self.tile_regions[row][col],
-                scope="%d.sublime2048 new_number.sublime2048" % number,
+                scope="%d.2048 new_number.2048" % number,
                 flags=sublime.DRAW_NO_OUTLINE|sublime.PERSISTENT)
 
         self.view.sel().clear()
         self.view.set_read_only(True)
 
     def load_record(self):
-        settings = sublime.load_settings(sublime2048_record)
-        return settings.get("record", {})
+        return sublime.load_settings(game2048_record).get("record", {})
 
 
-class Sublime2048Setup(sublime_plugin.WindowCommand):
+class Game2048Setup(sublime_plugin.WindowCommand):
     def run(self):
         view = self.window.new_file()
-        view.run_command("sublime2048", {"command": "setup"})
+        view.run_command("game2048_run_command", {"command": "setup"})
 
 
-class Sublime2048Manager(sublime_plugin.ViewEventListener):
+class Game2048Manager(sublime_plugin.ViewEventListener):
     is_activated = False
 
     @classmethod
     def is_applicable(cls, settings):
-        return settings.has("sublime2048")
+        return settings.has("2048")
 
     def on_query_context(self, key, operator, operand, match_all):
-        if self.view.settings().get('play2048_ai', False):
+        if key == '2048':
+            return True
+        if self.view.settings().get('2048.ai', False):
             return False
-        return key == "play2048"
+        return key == "2048.play"
 
     def on_selection_modified(self):
         self.view.sel().clear()
 
     def on_activated(self):
         if not self.is_activated:
-            self.view.run_command("sublime2048", {
+            self.view.run_command("game2048_run_command", {
                 "command": "setup",
-                "record": self.view.settings().get("record")
+                "record": self.view.settings().get("2048.record")
             })
             self.is_activated = True
 
     def on_close(self):
-        if self.view.settings().has("record"):
-            self.save_record(self.view.settings().get("record"))
-            sublime.status_message("Sublime2048: game record saved")
+        if self.view.settings().has("2048.record"):
+            self.save_record(self.view.settings().get("2048.record"))
+            sublime.status_message(f"{__package__}: game record saved")
 
     def save_record(self, record):
-        settings = sublime.load_settings(sublime2048_record)
-        settings.set("record", record)
-        sublime.save_settings(sublime2048_record)
+        sublime.load_settings(game2048_record).set("record", record)
+        sublime.save_settings(game2048_record)
 
 
 def plugin_loaded():
-    sublime.set_timeout_async(Sublime2048.load_resource)
+    sublime.set_timeout_async(Game2048RunCommandCommand.load_resource)

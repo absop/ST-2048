@@ -7,7 +7,7 @@ class ColorSchemeManager():
     color_scheme = "Monokai.sublime-color-scheme"
 
     def __init__(self):
-        self.settings = sublime.load_settings("Sublime2048.sublime-settings")
+        self.settings = sublime.load_settings("2048.sublime-settings")
         self.prefs = sublime.load_settings("Preferences.sublime-settings")
         self.settings.clear_on_change('colors')
         self.prefs.clear_on_change("color_scheme")
@@ -17,7 +17,7 @@ class ColorSchemeManager():
 
     def cache_path(self):
         return os.path.join(sublime.packages_path(),
-            "User", "Color Schemes", "Sublime2048")
+            "User", "Color Schemes", "2048")
 
     def clear(self):
         color_scheme_path = self.cache_path()
@@ -46,19 +46,19 @@ class ColorSchemeManager():
         color_scheme_file = os.path.join(color_scheme_path, color_scheme_name)
         color_scheme_data = {
             "name": os.path.splitext(os.path.basename(self.color_scheme))[0],
-            "author": "Sublime2048",
+            "author": "https://github.com/absop/ST-2048",
             "variables": {},
             "globals": {},
             "rules": [
                 {
-                    "scope": key + ".sublime2048",
+                    "scope": key + ".2048",
                     "foreground": foreground,
                     "background": value
                 }
                 for key, value in colors["background"].items()
             ] + [
                 {
-                    "scope": key + ".sublime2048",
+                    "scope": key + ".2048",
                     "foreground": value,
                 }
                 for key, value in colors["foreground"].items()

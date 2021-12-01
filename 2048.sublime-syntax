@@ -1,31 +1,31 @@
 %YAML 1.2
 ---
 # See http://www.sublimetext.com/docs/3/syntax.html
-scope: text.sublime2048
+scope: text.2048
 
 contexts:
   main:
     - match: '[a-zA-Z]+'
-      scope: keyword.sublime2048
+      scope: keyword.2048
 
     - match: \d+
-      scope: constant.numeric.sublime2048
+      scope: constant.numeric.2048
 
     - match: ╠═══════╤═══════╤═══════╤═══════╣
-      scope: boundary.sublime2048
+      scope: boundary.2048
       push: board
 
     - match: ↑|↓|←|→
-      scope: arrow.sublime2048
+      scope: arrow.2048
 
     - match: ─|╠|╤|╧|╟|╢|┼|║|│|╚|═|╝|╔|╗|╣
-      scope: boundary.sublime2048
+      scope: boundary.2048
 
 
   board:
     - match: ─|╠|╤|╧|╟|╢|┼|║|│|╚|═|╝
-      scope: boundary.sublime2048
+      scope: boundary.2048
 
     - match: \d+
-      scope: number.sublime2048
+      scope: number.2048
 

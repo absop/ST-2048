@@ -1,11 +1,23 @@
 [
     {
+        "keys": ["a"],
+        "command": "game2048_run_command",
+        "args": { "command": "toggle_auto_move"},
+        "context": [
+            {
+                "key": "2048",
+                "operator": "equal",
+                "operand": true
+            }
+        ]
+    },
+    {
         "keys": ["up"],
-        "command": "sublime2048",
+        "command": "game2048_run_command",
         "args": { "command": "move", "key": "↑"},
         "context": [
             {
-                "key": "play2048",
+                "key": "2048.play",
                 "operator": "equal",
                 "operand": true
             }
@@ -13,11 +25,11 @@
     },
     {
         "keys": ["down"],
-        "command": "sublime2048",
+        "command": "game2048_run_command",
         "args": { "command": "move", "key": "↓"},
         "context": [
             {
-                "key": "play2048",
+                "key": "2048.play",
                 "operator": "equal",
                 "operand": true
             }
@@ -25,11 +37,11 @@
     },
     {
         "keys": ["left"],
-        "command": "sublime2048",
+        "command": "game2048_run_command",
         "args": { "command": "move", "key": "←"},
         "context": [
             {
-                "key": "play2048",
+                "key": "2048.play",
                 "operator": "equal",
                 "operand": true
             }
@@ -37,11 +49,11 @@
     },
     {
         "keys": ["right"],
-        "command": "sublime2048",
+        "command": "game2048_run_command",
         "args": { "command": "move", "key": "→"},
         "context": [
             {
-                "key": "play2048",
+                "key": "2048.play",
                 "operator": "equal",
                 "operand": true
             }
